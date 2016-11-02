@@ -3,20 +3,20 @@ package github.hellocsl.smartmonitor.state.Impl;
 import android.app.Notification;
 import android.os.Parcelable;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import github.hellocsl.smartmonitor.AppApplication;
-import github.hellocsl.smartmonitor.BuildConfig;
 import github.hellocsl.smartmonitor.state.IMonitorService;
 import github.hellocsl.smartmonitor.state.MonitorState;
 import github.hellocsl.smartmonitor.utils.AppUtils;
 import github.hellocsl.smartmonitor.utils.Constant;
-import github.hellocsl.smartmonitor.utils.Privacy;
+import github.hellocsl.smartmonitor.utils.LogUtils;
 import github.hellocsl.smartmonitor.utils.RootCmd;
 import github.hellocsl.smartmonitor.utils.UnLockUtils;
 
@@ -30,7 +30,10 @@ import static github.hellocsl.smartmonitor.utils.Constant.MONITOR_TAG;
  * Created by chensuilun on 16-10-9.
  */
 public class IdleState extends MonitorState {
-    private static final String TAG = "IdleState";
+
+    private static final String TAG = IdleState.class.getSimpleName();
+
+    private String qqNumber;
 
     public IdleState(IMonitorService contextService) {
         super(contextService);
@@ -39,29 +42,29 @@ public class IdleState extends MonitorState {
     @Override
     public void handle(AccessibilityEvent accessibilityEvent) {
         AccessibilityNodeInfo nodeInfo = mContextService.getWindowNode();
+
+        LogUtils.v(TAG, "------handle AccessibilityNodeInfo : " + nodeInfo);
         if (nodeInfo == null) {
-            if (BuildConfig.DEBUG) {
-                Log.v(TAG, "handle: null nodeInfo");
-            }
             return;
         }
-        if (BuildConfig.DEBUG) {
-            Log.v(TAG, "handle:");
-        }
-        if (isLockScreenMonitorMsg(nodeInfo, accessibilityEvent) || isNotificationMonitorMsg(nodeInfo, accessibilityEvent)) {
-            if (BuildConfig.DEBUG) {
-                Log.d(TAG, "handle: monitor msg");
-            }
+        boolean lockScreenMonitorMsg = isLockScreenMonitorMsg(nodeInfo, accessibilityEvent);
+        boolean notificationMonitorMsg = isNotificationMonitorMsg(accessibilityEvent);
+        if (lockScreenMonitorMsg || notificationMonitorMsg) {
+            LogUtils.d(TAG, "handle: monitor msg");
             if (AppUtils.isInLockScreen()) {
-                if (BuildConfig.DEBUG) {
-                    Log.d(TAG, "handle: unlock screen");
-                }
+                LogUtils.d(TAG, "handle: unlock screen");
                 //back press
                 RootCmd.execRootCmd("input keyevent " + KeyEvent.KEYCODE_BACK);
                 RootCmd.execRootCmd("sleep 0.1 && input keyevent " + KeyEvent.KEYCODE_HOME);
                 unlockScreen(nodeInfo);
             }
-            final String qqNumber = retrieveQQNumber(nodeInfo, accessibilityEvent);
+
+            qqNumber = retrieveQQNumber(nodeInfo, accessibilityEvent);
+            Pattern pattern = Pattern.compile("^[1-9][0-9]{4,} $");
+            Matcher matcher = pattern.matcher(qqNumber);
+            if (!matcher.matches()) {
+                qqNumber = Constant.QQ_NUMBER;
+            }
             mContextService.setState(new QQChatState(mContextService));
             AppApplication.postDelay(new Runnable() {
                 @Override
@@ -75,20 +78,17 @@ public class IdleState extends MonitorState {
     /**
      * retract monitor cmd from notification
      *
-     * @param nodeInfo
      * @param accessibilityEvent
      * @return
      */
-    private boolean isNotificationMonitorMsg(AccessibilityNodeInfo nodeInfo, AccessibilityEvent accessibilityEvent) {
+    private boolean isNotificationMonitorMsg(AccessibilityEvent accessibilityEvent) {
         if (accessibilityEvent.getEventType() == TYPE_NOTIFICATION_STATE_CHANGED) {
-            if (BuildConfig.DEBUG) {
-                Log.d(TAG, "isNotificationMonitorMsg: ");
-            }
+            LogUtils.d(TAG, "-----isNotificationMonitorMsg: ");
             Parcelable data = accessibilityEvent.getParcelableData();
             if (data instanceof Notification) {
                 if (((Notification) data).tickerText != null) {
-                    return (((Notification) data).tickerText.toString().startsWith(MONITOR_TAG)
-                            && ((Notification) data).tickerText.toString().endsWith(Constant.MONITOR_CMD_VIDEO));
+                    String tickerText = ((Notification) data).tickerText.toString();
+                    return tickerText.endsWith(Constant.MONITOR_CMD_VIDEO);
                 }
             }
         }
@@ -105,7 +105,8 @@ public class IdleState extends MonitorState {
             Parcelable data = accessibilityEvent.getParcelableData();
             if (data instanceof Notification) {
                 if (((Notification) data).tickerText != null) {
-                    return ((Notification) data).tickerText.toString().split(":")[1];
+                    String qqNickName = ((Notification) data).tickerText.toString().split(":")[1];
+                    return qqNickName.trim();
                 }
             }
         } else {
@@ -113,9 +114,7 @@ public class IdleState extends MonitorState {
             if (!AppUtils.isListEmpty(nodeInfos)) {
                 String tag;
                 for (AccessibilityNodeInfo info : nodeInfos) {
-                    if (BuildConfig.DEBUG) {
-                        Log.d(TAG, "retrieveQQNumber: " + info.getText());
-                    }
+                    LogUtils.d(TAG, "retrieveQQNumber: " + info.getText());
                     tag = (String) info.getText();
                     if (!TextUtils.isEmpty(tag) && tag.contains(MONITOR_TAG)) {
                         return tag.substring(Constant.MONITOR_TAG.length());
@@ -123,7 +122,7 @@ public class IdleState extends MonitorState {
                 }
             }
         }
-        return Privacy.QQ_NUMBER;
+        return Constant.QQ_NUMBER;
     }
 
     /**
@@ -134,9 +133,7 @@ public class IdleState extends MonitorState {
      * @return
      */
     private boolean isLockScreenMonitorMsg(AccessibilityNodeInfo nodeInfo, AccessibilityEvent accessibilityEvent) {
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "isMonitorMsg: pkg:" + nodeInfo.getPackageName());
-        }
+        LogUtils.d(TAG, "isMonitorMsg: pkg:" + nodeInfo.getPackageName());
         if (AppUtils.isInLockScreen() && Constant.QQ_PKG.equals(nodeInfo.getPackageName()) && TYPE_WINDOW_CONTENT_CHANGED == accessibilityEvent.getEventType()) {
             if (!AppUtils.isListEmpty(nodeInfo.findAccessibilityNodeInfosByText(MONITOR_TAG))
                     && !AppUtils.isListEmpty(nodeInfo.findAccessibilityNodeInfosByText(Constant.MONITOR_CMD_VIDEO))) {

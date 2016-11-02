@@ -1,6 +1,5 @@
 package github.hellocsl.smartmonitor.state.Impl;
 
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -8,11 +7,11 @@ import android.widget.RelativeLayout;
 
 import java.util.List;
 
-import github.hellocsl.smartmonitor.BuildConfig;
 import github.hellocsl.smartmonitor.state.IMonitorService;
 import github.hellocsl.smartmonitor.state.MonitorState;
 import github.hellocsl.smartmonitor.utils.AppUtils;
 import github.hellocsl.smartmonitor.utils.Constant;
+import github.hellocsl.smartmonitor.utils.LogUtils;
 import github.hellocsl.smartmonitor.utils.RootCmd;
 
 /**
@@ -30,22 +29,17 @@ public class EndingSate extends MonitorState {
     public void handle(AccessibilityEvent accessibilityEvent) {
         AccessibilityNodeInfo nodeInfo = mContextService.getWindowNode();
         if (nodeInfo == null) {
-            if (BuildConfig.DEBUG) {
-                Log.v(TAG, "handle: null nodeInfo");
-            }
+            LogUtils.v(TAG, "handle: null nodeInfo");
             return;
         }
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "handle: ");
-        }
+        LogUtils.d(TAG, "handle: ");
         if (isVideoChatEnded(nodeInfo, accessibilityEvent)) {
             if (!AppUtils.isInLockScreen()) {
-                if (BuildConfig.DEBUG) {
-                    Log.d(TAG, "handle: close screen");
-                }
+                LogUtils.d(TAG, "handle: close screen");
                 //熄屏,等待下次命令
-                RootCmd.execRootCmd("sleep 0.1 && input keyevent " + KeyEvent.KEYCODE_POWER);
+                RootCmd.execRootCmd("sleep 0.1 && input keyevent " + KeyEvent.KEYCODE_HOME);
             }
+            RootCmd.execRootCmd("sleep 0.1 && input keyevent " + KeyEvent.KEYCODE_HOME);
             mContextService.setState(new IdleState(mContextService));
         }
     }

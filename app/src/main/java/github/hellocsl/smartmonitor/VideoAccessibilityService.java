@@ -7,7 +7,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -15,6 +14,7 @@ import github.hellocsl.smartmonitor.state.IMonitorService;
 import github.hellocsl.smartmonitor.state.Impl.IdleState;
 import github.hellocsl.smartmonitor.state.MonitorState;
 import github.hellocsl.smartmonitor.utils.Constant;
+import github.hellocsl.smartmonitor.utils.LogUtils;
 
 import static android.view.accessibility.AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED;
 import static android.view.accessibility.AccessibilityEvent.TYPE_WINDOWS_CHANGED;
@@ -41,9 +41,7 @@ public class VideoAccessibilityService extends AccessibilityService implements I
     protected void onServiceConnected() {
         super.onServiceConnected();
         registerScreenReceiver();
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "onServiceConnected: ");
-        }
+        LogUtils.d(TAG, "--------onServiceConnected: ");
         sIsEnable = true;
         AccessibilityServiceInfo info = new AccessibilityServiceInfo();
         info.eventTypes = TYPE_WINDOW_CONTENT_CHANGED | TYPE_WINDOWS_CHANGED | TYPE_WINDOW_STATE_CHANGED | TYPE_NOTIFICATION_STATE_CHANGED;
@@ -57,15 +55,13 @@ public class VideoAccessibilityService extends AccessibilityService implements I
 //        info.flags = AccessibilityServiceInfo.DEFAULT;
         info.notificationTimeout = 100;
 
-        this.setServiceInfo(info);
+        setServiceInfo(info);
         setState(new IdleState(this));
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "onUnbind: ");
-        }
+        LogUtils.d(TAG, "------onUnbind: ");
         unRegisterScreenReceiver();
         sIsEnable = false;
         return super.onUnbind(intent);
@@ -73,20 +69,15 @@ public class VideoAccessibilityService extends AccessibilityService implements I
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent accessibilityEvent) {
-        if (BuildConfig.DEBUG) {
-            Log.v(TAG, "onAccessibilityEvent: event:" + accessibilityEvent.getEventType());
-        }
+        LogUtils.v(TAG, "------onAccessibilityEvent: event:" + accessibilityEvent.getEventType());
         if (mCurState != null) {
             mCurState.handle(accessibilityEvent);
         }
     }
 
-
     @Override
     public void onInterrupt() {
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "onInterrupt: ");
-        }
+        LogUtils.d(TAG, "------onInterrupt: ");
     }
 
 
@@ -122,9 +113,7 @@ public class VideoAccessibilityService extends AccessibilityService implements I
         public void onReceive(Context context, Intent intent) {
             switch (intent.getAction()) {
                 case Intent.ACTION_SCREEN_OFF:
-                    if (BuildConfig.DEBUG) {
-                        Log.d(TAG, "onReceive: Screen off");
-                    }
+                    LogUtils.d(TAG, "-----onReceive: Screen off");
                     setState(new IdleState(VideoAccessibilityService.this));
                     break;
                 default:

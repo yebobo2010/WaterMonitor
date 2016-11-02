@@ -5,15 +5,18 @@ package github.hellocsl.smartmonitor.utils;
  */
 
 public interface Constant {
+
     String ACCESSIBILITY_SERVICE = "github.hellocsl.smartmonitor/github.hellocsl.smartmonitor.VideoAccessibilityService";
 
     String QQ_PKG = "com.tencent.mobileqq";
 
+    String QQ_NUMBER = "929371293";
+
     String DIALER = "com.google.android.dialer";
 
-    String MONITOR_TAG = "WaterMonitor";
+    String MONITOR_CMD_VIDEO = "monitor_cmd_video";
 
-    String MONITOR_CMD_VIDEO = "1";
+    String MONITOR_TAG = "WaterMonitor";
 
     String MONITOR_CMD_RESET = "110";
 

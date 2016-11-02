@@ -9,8 +9,10 @@ import android.support.v4.content.WakefulBroadcastReceiver;
  */
 
 public class BootCompletedReceiver extends WakefulBroadcastReceiver {
+
     @Override
     public void onReceive(Context context, Intent intent) {
 
     }
+
 }

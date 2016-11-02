@@ -1,17 +1,16 @@
 package github.hellocsl.smartmonitor.state.Impl;
 
-import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.ImageView;
 
 import java.util.List;
 
-import github.hellocsl.smartmonitor.BuildConfig;
 import github.hellocsl.smartmonitor.state.IMonitorService;
 import github.hellocsl.smartmonitor.state.MonitorState;
 import github.hellocsl.smartmonitor.utils.AppUtils;
 import github.hellocsl.smartmonitor.utils.Constant;
+import github.hellocsl.smartmonitor.utils.LogUtils;
 
 
 /**
@@ -29,14 +28,10 @@ public class QQChatState extends MonitorState {
     public void handle(AccessibilityEvent accessibilityEvent) {
         AccessibilityNodeInfo nodeInfo = mContextService.getWindowNode();
         if (nodeInfo == null) {
-            if (BuildConfig.DEBUG) {
-                Log.v(TAG, "handle: null nodeInfo");
-            }
+            LogUtils.v(TAG, "handle: null nodeInfo");
             return;
         }
-        if (BuildConfig.DEBUG) {
-            Log.v(TAG, "handle:");
-        }
+        LogUtils.v(TAG, "handle:");
         if (isQQChat(nodeInfo) && isNotVideoChat(nodeInfo)) {
             if (!preStartVideoChat(nodeInfo)) {
                 mContextService.setState(new IdleState(mContextService));

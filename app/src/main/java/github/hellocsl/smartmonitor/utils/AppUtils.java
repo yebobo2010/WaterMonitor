@@ -10,13 +10,11 @@ import android.os.Build;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.io.File;
 import java.util.List;
 
 import github.hellocsl.smartmonitor.AppApplication;
-import github.hellocsl.smartmonitor.BuildConfig;
 
 import static android.content.Context.KEYGUARD_SERVICE;
 import static android.os.Build.VERSION_CODES.JELLY_BEAN;
@@ -34,9 +32,7 @@ public class AppUtils {
      * @param qqNumber
      */
     public static void openQQChat(String qqNumber) {
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "openQQChat() called with: " + "qqNumber = [" + qqNumber + "]");
-        }
+        LogUtils.d(TAG, "openQQChat() called with: " + "qqNumber = [" + qqNumber + "]");
         String url = "mqqwpa://im/chat?chat_type=wpa&uin=" + qqNumber + "&version=1";
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -45,7 +41,7 @@ public class AppUtils {
         try {
             AppApplication.getContext().startActivity(intent);
         } catch (Exception e) {
-            Log.e(TAG, "openQQChat: QQ not install!!!");
+            LogUtils.e(TAG, "openQQChat: QQ not install!!!");
             return;
         }
     }

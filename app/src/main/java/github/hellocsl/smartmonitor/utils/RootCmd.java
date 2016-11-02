@@ -84,7 +84,7 @@ public final class RootCmd {
             dos = new DataOutputStream(p.getOutputStream());
 
             Log.i(TAG, cmd);
-            dos.writeBytes(cmd + "\n");
+            dos.writeBytes(cmd + '\n');
             dos.flush();
             dos.writeBytes("exit\n");
             dos.flush();
